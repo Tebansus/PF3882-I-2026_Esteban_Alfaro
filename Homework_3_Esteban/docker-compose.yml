@@ -1,0 +1,60 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: easypass-rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - easypass-network
+
+  catalog:
+    build:
+      context: ./catalog
+    container_name: easypass-catalog
+    hostname: catalog
+    ports:
+      - "8001:8000"
+    networks:
+      - easypass-network
+
+  ticketing:
+    build:
+      context: ./ticketing
+    container_name: easypass-ticketing
+    hostname: ticketing
+    env_file:
+      - ./ticketing/.env
+    ports:
+      - "8002:8000"
+    environment:
+      CATALOG_SERVICE_URL: http://catalog:8000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - catalog
+      - rabbitmq
+    networks:
+      - easypass-network
+
+  access_control:
+    build:
+      context: ./access_control
+    container_name: easypass-access-control
+    hostname: access_control
+    env_file:
+      - ./access_control/.env
+    ports:
+      - "8003:8000"
+    environment:
+      TICKETING_SERVICE_URL: http://ticketing:8000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - ticketing
+      - rabbitmq
+    networks:
+      - easypass-network
+
+networks:
+  easypass-network:
+    driver: bridge
