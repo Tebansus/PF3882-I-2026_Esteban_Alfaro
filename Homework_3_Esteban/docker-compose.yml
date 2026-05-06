@@ -24,8 +24,7 @@ services:
       context: ./ticketing
     container_name: easypass-ticketing
     hostname: ticketing
-    env_file:
-      - ./ticketing/.env
+    
     ports:
       - "8002:8000"
     environment:
@@ -42,8 +41,7 @@ services:
       context: ./access_control
     container_name: easypass-access-control
     hostname: access_control
-    env_file:
-      - ./access_control/.env
+    
     ports:
       - "8003:8000"
     environment:
