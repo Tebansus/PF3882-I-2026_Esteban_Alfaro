@@ -1,0 +1,144 @@
+{
+  "consumer": {
+    "name": "Ticketing"
+  },
+  "provider": {
+    "name": "Catalog"
+  },
+  "interactions": [
+    {
+      "description": "a request to fetch event event-001",
+      "providerState": "event event-001 exists with availability in zone VIP Pit",
+      "request": {
+        "method": "GET",
+        "path": "/events/event-001"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "id": "event-001",
+          "venue": "Allianz Parque",
+          "zones": [
+            {
+              "name": "VIP Pit",
+              "price": 150.0,
+              "available": 180
+            }
+          ]
+        },
+        "matchingRules": {
+          "$.body.venue": {
+            "match": "type"
+          },
+          "$.body.zones": {
+            "min": 1
+          },
+          "$.body.zones[*].*": {
+            "match": "type"
+          },
+          "$.body.zones[*].name": {
+            "match": "type"
+          },
+          "$.body.zones[*].price": {
+            "match": "type"
+          },
+          "$.body.zones[*].available": {
+            "match": "type"
+          }
+        }
+      }
+    },
+    {
+      "description": "a request to reserve inventory for an order",
+      "providerState": "event event-001 exists with availability in zone VIP Pit",
+      "request": {
+        "method": "POST",
+        "path": "/inventory/reservations",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "order-pact-001",
+          "event_id": "event-001",
+          "zone_name": "VIP Pit",
+          "quantity": 2
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+        },
+        "body": {
+          "id": "order-pact-001",
+          "event_id": "event-001",
+          "zone_name": "VIP Pit",
+          "quantity": 2,
+          "status": "RESERVED"
+        }
+      }
+    },
+    {
+      "description": "a request to confirm a held reservation",
+      "providerState": "a reservation order-pact-001 is held for event event-001",
+      "request": {
+        "method": "POST",
+        "path": "/inventory/reservations/order-pact-001/confirm"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "id": "order-pact-001",
+          "event_id": "event-001",
+          "zone_name": "VIP Pit",
+          "quantity": 2,
+          "status": "CONFIRMED"
+        }
+      }
+    },
+    {
+      "description": "a request to release a held reservation",
+      "providerState": "a reservation order-pact-001 is held for event event-001",
+      "request": {
+        "method": "POST",
+        "path": "/inventory/reservations/order-pact-001/release"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "id": "order-pact-001",
+          "event_id": "event-001",
+          "zone_name": "VIP Pit",
+          "quantity": 2,
+          "status": "RELEASED"
+        }
+      }
+    },
+    {
+      "description": "a request to fetch a non-existent event",
+      "providerState": "event nonexistent-event does not exist",
+      "request": {
+        "method": "GET",
+        "path": "/events/nonexistent-event"
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+        },
+        "body": {
+          "detail": "Event not found"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}

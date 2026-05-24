@@ -1,0 +1,87 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: easypass-rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - easypass-network
+
+  catalog:
+    build:
+      context: ./catalog
+    container_name: easypass-catalog
+    hostname: catalog
+    ports:
+      - "8001:8000"
+    environment:
+      # Exposes the test-only /_pact/provider_states endpoint used by the
+      # Pact provider verifier to reset the catalog between interactions.
+      PACT_PROVIDER_STATES: "true"
+    networks:
+      - easypass-network
+
+  ticketing:
+    build:
+      context: ./ticketing
+    container_name: easypass-ticketing
+    hostname: ticketing
+    
+    ports:
+      - "8002:8000"
+    environment:
+      CATALOG_SERVICE_URL: http://catalog:8000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      # Exposes the test-only /_pact/provider_states endpoint used by the
+      # Pact provider verifier to seed orders between interactions.
+      PACT_PROVIDER_STATES: "true"
+    depends_on:
+      - catalog
+      - rabbitmq
+    networks:
+      - easypass-network
+
+  access_control:
+    build:
+      context: ./access_control
+    container_name: easypass-access-control
+    hostname: access_control
+    
+    ports:
+      - "8003:8000"
+    environment:
+      TICKETING_SERVICE_URL: http://ticketing:8000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - ticketing
+      - rabbitmq
+    networks:
+      - easypass-network
+
+  # Pact contract tests. Gated behind the "pact" profile so a normal
+  # `docker compose up` does not run it. It generates the consumer contracts
+  # and then verifies them against the live Catalog and Ticketing services.
+  # Run with:  docker compose --profile pact run --rm pact-tests
+  pact-tests:
+    build:
+      context: ./pact_tests
+    container_name: easypass-pact-tests
+    profiles:
+      - pact
+    environment:
+      CATALOG_BASE_URL: http://catalog:8000
+      TICKETING_BASE_URL: http://ticketing:8000
+    volumes:
+      # Persist the generated contracts back to the host for inspection.
+      - ./pact_tests/pacts:/app/pacts
+    depends_on:
+      - catalog
+      - ticketing
+    networks:
+      - easypass-network
+
+networks:
+  easypass-network:
+    driver: bridge
