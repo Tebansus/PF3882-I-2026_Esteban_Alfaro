@@ -1,0 +1,42 @@
+{
+  "consumer": {
+    "name": "Ticketing"
+  },
+  "provider": {
+    "name": "AccessControl"
+  },
+  "messages": [
+    {
+      "description": "a delivery notification that an order was fulfilled",
+      "providerStates": [
+        {
+          "name": "a delivery confirmation is published for a paid order",
+          "params": null
+        }
+      ],
+      "contents": {
+        "order_id": "order-pact-001",
+        "status": "DELIVERED"
+      },
+      "matchingRules": {
+        "body": {
+          "$.order_id": {
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ]
+          }
+        }
+      },
+      "metaData": {
+        "contentType": "application/json"
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "consumer": {
+    "name": "AccessControl"
+  },
+  "provider": {
+    "name": "Ticketing"
+  },
+  "interactions": [
+    {
+      "description": "a request to fetch a paid order",
+      "providerState": "a paid order order-pact-001 exists",
+      "request": {
+        "method": "GET",
+        "path": "/orders/order-pact-001"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "id": "order-pact-001",
+          "status": "PAID",
+          "items": [
+            {
+              "event_id": "event-001",
+              "zone_name": "VIP Pit",
+              "price_at_moment": 150.0,
+              "quantity": 2
+            }
+          ]
+        },
+        "matchingRules": {
+          "$.body.items": {
+            "min": 1
+          },
+          "$.body.items[*].*": {
+            "match": "type"
+          },
+          "$.body.items[*].event_id": {
+            "match": "type"
+          },
+          "$.body.items[*].zone_name": {
+            "match": "type"
+          },
+          "$.body.items[*].price_at_moment": {
+            "match": "type"
+          },
+          "$.body.items[*].quantity": {
+            "match": "type"
+          }
+        }
+      }
+    },
+    {
+      "description": "a request to fetch a non-existent order",
+      "providerState": "order order-missing does not exist",
+      "request": {
+        "method": "GET",
+        "path": "/orders/order-missing"
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+        },
+        "body": {
+          "detail": "Order not found"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}
